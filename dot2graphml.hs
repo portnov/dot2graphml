@@ -1,6 +1,6 @@
 {-# LANGUAGE ViewPatterns #-}
 
-import Data.Sequence
+import Data.Sequence hiding (filter, sort)
 import qualified Data.Foldable as F
 import qualified Data.Text.Lazy as T
 import qualified Data.Text.Lazy.IO as TIO
@@ -30,6 +30,7 @@ graphXml :: ArrowXml a => G.DotGraph String -> a XmlTree XmlTree
 graphXml dot = 
   let g = mkQName "g" "graphml" graphml
       sts = G.graphStatements dot
+      fullGraph = undeclaredNodes sts >< sts
       defcolor = fromMaybe "#FFFFCC" $ getColor $ concat [ga | G.GA (GraphAttrs ga) <- F.toList sts]
   in mkqelem g [sattr "xmlns" graphml, sattr "xmlns:y" yed,
                 sattr "xmlns:xsi" "http://www.w3.org/2001/XMLSchema-instance",
@@ -56,8 +57,8 @@ graphXml dot =
                       sattr "yfiles.type" "nodegraphics"] [],
         mkelem "graph" ([sattr "edgedefault" "directed",
                          sattr "parse.order" "free",
-                         sattr "parse.edges" (show $ nEdges sts),
-                         sattr "parse.nodes" (show $ nNodes sts)] ++ idAttr (G.graphID dot)) (run defcolor sts),
+                         sattr "parse.edges" (show $ nEdges fullGraph),
+                         sattr "parse.nodes" (show $ nNodes fullGraph)] ++ idAttr (G.graphID dot)) (run defcolor fullGraph),
         mkelem "data" [sattr "key" "d4"] [
           mkqelem (mkQName "y" "Resources" "") [] [] ]
         ]
@@ -86,6 +87,20 @@ idAttr x@(Just _) = [sattr "id" (showGID x)]
 
 idAttr' s Nothing = [sattr "id" s]
 idAttr' s x = [sattr "id" (showGID x ++ s)]
+
+allNodeNames :: G.DotStatements String -> [String]
+allNodeNames sts = concatMap go (F.toList sts)
+  where
+    go (G.DN (G.DotNode nid _)) = [nid]
+    go (G.SG (G.DotSG _ _ sg))  = concatMap go (F.toList sg)
+    go _ = []
+
+undeclaredNodes :: G.DotStatements String -> G.DotStatements String
+undeclaredNodes sts =
+  let allUsed = nub $ sort $ concat [ [from, to] | G.DE (G.DotEdge from to _) <- F.toList sts ]
+      declaredNodes = allNodeNames sts
+      mkNode name = G.DotNode name [Label (StrLabel $ T.pack name)]
+  in  fromList $ map (G.DN . mkNode) $ filter (`notElem` declaredNodes) allUsed
 
 run :: ArrowXml a => String -> G.DotStatements String -> [a XmlTree XmlTree]
 run baseClr sts = concat $ seqmap fromRoot sts
