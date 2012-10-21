@@ -1,0 +1,24 @@
+name:                dot2graphml
+version:             0.1.0.0
+synopsis:            Converter from GraphViz .dot format to yEd GraphML
+description:         This package contains a converter from DOT format used by
+                     GraphViz (http://graphviz.org) to variant of GraphML
+                     (http://graphml.graphdrawing.org/) used by yEd
+                     (http://www.yworks.com/en/products_yed_about.html).
+homepage:            http://redmine.iportnov.ru/projects/dot2graphml
+license:             BSD3
+license-file:        LICENSE
+author:              IlyaPortnov
+maintainer:          portnov84@rambler.ru
+-- copyright:           
+category:            Graphics
+build-type:          Simple
+cabal-version:       >=1.8
+
+executable dot2graphml
+  main-is:             dot2graphml.hs
+  -- other-modules:       
+  build-depends:       base > 4 && < 5,
+                       hxt >= 9.2,
+                       graphviz
+
