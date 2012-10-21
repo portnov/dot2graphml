@@ -13,9 +13,11 @@ import Text.XML.HXT.Core
 import Text.Printf
 import System.Environment
 
-parseDot :: FilePath -> IO (G.DotGraph String)
-parseDot path = do
-  text <- TIO.readFile path
+parseDot :: Maybe FilePath -> IO (G.DotGraph String)
+parseDot mbPath = do
+  text <- case mbPath of
+            Just path -> TIO.readFile path
+            Nothing   -> TIO.getContents
   return (parseDotGraph text)
 
 graphml :: String
@@ -188,8 +190,15 @@ getColor attrs =
 
 main :: IO ()
 main = do
-  [path, out] <- getArgs
-  graph <- parseDot path
-  runX $ root [] [graphXml graph >>> uniqueNamespacesFromDeclAndQNames] >>> propagateNamespaces >>> writeDocument [withCheckNamespaces yes, withIndent yes] out
+  argv <- getArgs
+  (mbInp,mbOutp) <- case argv of
+                      [] -> return (Nothing, Nothing)
+                      [p] -> return (Just p, Nothing)
+                      [p,q] -> return (Just p, Just q)
+                      _ -> do
+                           printf "Synopsis: dot2graphml [INPUT.dot] [OUTPUT.graphml]"
+                           fail "Invalid command line."
+  graph <- parseDot mbInp
+  runX $ root [] [graphXml graph >>> uniqueNamespacesFromDeclAndQNames] >>> propagateNamespaces >>> writeDocument [withCheckNamespaces yes, withIndent yes] (fromMaybe "-" mbOutp)
   return ()
 
