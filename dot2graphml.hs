@@ -192,10 +192,21 @@ run baseClr sts = concat $ seqmap fromRoot sts
             ]
           ]
 
-    getLabel attrs = case [lbl | Label lbl <- attrs] of
-                       [] -> ""
-                       (StrLabel l:_) -> T.unpack l
-                       (l:_) -> show l
+getLabel attrs =
+    case [lbl | Label lbl <- attrs] of
+      [] -> ""
+      (StrLabel l:_) -> renderEscapes $ T.unpack l
+      (l:_) -> show l
+
+renderEscapes :: String -> String
+renderEscapes str = go str
+  where
+    go [] = []
+    go [c] = [c]
+    go ('\\':'n':cs) = '\n': go cs
+    go ('\\':'l':cs) = '\n': go cs
+    go ('\\':'r':cs) = '\n': go cs
+    go (c:cs) = c: go cs
 
 getColor attrs =
     case concat [clr | Color clr <- attrs] of
