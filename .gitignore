@@ -2,3 +2,5 @@
 *.o
 *.swp
 dot2graphml
+cabal-dev/
+dist/
