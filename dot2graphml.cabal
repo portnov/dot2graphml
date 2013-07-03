@@ -1,5 +1,5 @@
 name:                dot2graphml
-version:             0.1.0.0
+version:             0.1.0.1
 synopsis:            Converter from GraphViz .dot format to yEd GraphML
 description:         This package contains a converter from DOT format used by
                      GraphViz (http://graphviz.org) to variant of GraphML
