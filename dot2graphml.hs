@@ -153,7 +153,7 @@ run baseClr sts = concat $ seqmap fromRoot sts
           mkqelem geometry [sattr "height" "30.0", sattr "width" "30.0", sattr "x" "0.0", sattr "y" "0.0"] [],
           mkqelem fill [clrAttr color, sattr "transparent" "false"] [],
           mkqelem border [sattr "color" "#000000", sattr "type" "line", sattr "width" "1.0"] [],
-          mkqelem shape [sattr "type" "rectangle"] [],
+          mkqelem shape [sattr "type" "ellipse"] [],
           mkqelem nodeLabel [sattr "alignment" "center",
                              sattr "autoSizePolicy" "content",
                              sattr "hasBackgroundColor" "false",
@@ -177,7 +177,7 @@ run baseClr sts = concat $ seqmap fromRoot sts
                                 sattr "closedHeight" "50.0",
                                 sattr "closedWidth"  "50.0",
                                 sattr "innerGraphDisplayEnabled" "false"] [],
-                 mkqelem shape [sattr "type" "rectangle"] [],
+                 mkqelem shape [sattr "type" "ellipse"] [],
                  lbl
                ],
                mkqelem groupNode [] [
@@ -211,7 +211,7 @@ renderEscapes str = go str
 getColor attrs =
     case concat [clr | Color clr <- attrs] of
        [] -> Nothing
-       (RGB r g b:_) -> Just $  printf "#%02x%02x%02x" r g b
+       (WC (RGB r g b) _:_) -> Just $  printf "#%02x%02x%02x" r g b
        _ -> Nothing
 
 main :: IO ()
