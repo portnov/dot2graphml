@@ -77,10 +77,11 @@ nEdges sts = sum $ seqmap go sts
 
 seqmap f xs = F.toList $ fmap f xs
 
+showGID :: Maybe GraphID -> String
 showGID Nothing = ""
 showGID (Just (Str str)) = T.unpack str
-showGID (Just (Int int)) = "i" ++ show int
-showGID (Just (Dbl dbl)) = "d" ++ show dbl
+showGID (Just (Num (Int int))) = "i" ++ show int
+showGID (Just (Num (Dbl dbl))) = "d" ++ show dbl
 
 idAttr Nothing = []
 idAttr x@(Just _) = [sattr "id" (showGID x)]
