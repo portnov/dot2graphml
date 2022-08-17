@@ -55,6 +55,9 @@ graphXml dot =
         mkelem "key" [sattr "for" "node",
                       sattr "id" "d6",
                       sattr "yfiles.type" "nodegraphics"] [],
+        mkelem "key" [sattr "for" "edge",
+                      sattr "id" "d7",
+                      sattr "yfiles.type" "edgegraphics"] [],
         mkelem "graph" ([sattr "edgedefault" "directed",
                          sattr "parse.order" "free",
                          sattr "parse.edges" (show $ nEdges fullGraph),
@@ -110,9 +113,9 @@ run baseClr sts = concat $ seqmap fromRoot sts
                 [ga | G.GA (G.GraphAttrs ga) <- concatMap F.toList [sg | G.SG (G.DotSG _ _ sg) <- F.toList sts]]
 
     fromRoot (G.SG (G.DotSG cl gid subgraph)) = seqmap go subgraph
-    fromRoot (G.DE (G.DotEdge from to _)) = [mkelem "edge" [sattr "source" from,
+    fromRoot (G.DE (G.DotEdge from to attrs)) = [mkelem "edge" [sattr "source" from,
                                                             sattr "target" to,
-                                                            sattr "id" (from ++ to) ] [] ]
+                                                            sattr "id" (from ++ to) ] [yedge (getLabel attrs)] ]
     fromRoot (G.DN (G.DotNode nid attrs)) = [mkelem "node" [sattr "id" nid] [ynode (getLabel attrs) (Just defcolor)] ]
     fromRoot x = [cmt (show x)]
 
@@ -124,10 +127,11 @@ run baseClr sts = concat $ seqmap fromRoot sts
     go (G.DN (G.DotNode nid attrs)) =
         mkelem "node" [sattr "id" nid] [ynode (getLabel attrs) (getColor attrs),
                                         mkelem "data" [sattr "key" "d1"] [] ]
-    go (G.DE (G.DotEdge from to _)) =
+    go (G.DE (G.DotEdge from to attrs)) =
         mkelem "edge" [sattr "source" from,
                        sattr "target" to,
-                       sattr "id" (from ++ to)] [mkelem "data" [sattr "key" "d3"] [] ]
+                       sattr "id" (from ++ to)] [yedge (getLabel attrs),
+                                                 mkelem "data" [sattr "key" "d3"] [] ]
     go (G.GA ga) = cmt (show ga)
 
     graphAttrs sts = case [ga | G.GA (G.GraphAttrs ga) <- F.toList sts] of
@@ -136,6 +140,11 @@ run baseClr sts = concat $ seqmap fromRoot sts
 
     shapeNode       = mkQName "y" "ShapeNode" ""
     nodeLabel       = mkQName "y" "NodeLabel" ""
+    polyLineEdge    = mkQName "y" "PolyLineEdge" ""
+    edgeLabel       = mkQName "y" "EdgeLabel" ""
+    -- labelModel      = mkQName "y" "LabelModel" ""
+    -- smartEdgeLabelModel = mkQName "y" "SmartEdgeLabelModel" ""
+    arrows          = mkQName "y" "Arrows" ""
     geometry        = mkQName "y" "Geometry" ""
     fill            = mkQName "y" "Fill" ""
     border          = mkQName "y" "BotderStyle" ""
@@ -147,6 +156,21 @@ run baseClr sts = concat $ seqmap fromRoot sts
 
     clrAttr Nothing = sattr "color" defcolor
     clrAttr (Just clr) = sattr "color" clr
+
+    yedge label =
+      mkelem "data" [sattr "key" "d7"] [
+        mkqelem polyLineEdge [] [
+            mkqelem arrows [sattr "source" "none", sattr "target" "standard"] [],
+            mkqelem edgeLabel [sattr "modelName" "free" -- go with free and then auto layout the labels
+                               -- sattr "preferredPlacement" "center",
+                               -- sattr "configuration" "AutoFlippingLabel",
+                               -- sattr "hasBackgroundColor" "true",
+                               -- sattr "backgroundColor" "#ffffff"
+                              ]
+                    [txt label
+                    -- , mkqelem labelModel [] [
+                    --     mkqelem smartEdgeLabelModel [sattr "autoRotationEnabled" "true"] [] ]
+                    ] ] ]
 
     ynode label color =
       mkelem "data" [sattr "key" "d0"] [
